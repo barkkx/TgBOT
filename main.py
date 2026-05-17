@@ -3,13 +3,9 @@ from telegram.ext import CommandHandler
 from telegram.ext import MessageHandler, Filters
 import os
 from dotenv import load_dotenv
-load_dotenv()
 
 
 
-TOKEN = os.getenv("TOKEN")
-updater = Updater(token=TOKEN, use_context=True)
-dispatcher = updater.dispatcher
 
 ZODIACS = {
     'овен': 'Сегодня день для решительных действий! Вас ждёт успех.',
@@ -26,16 +22,17 @@ ZODIACS = {
     'рыбы': 'Сегодня вас ждет приятный сюрприз от близкого человека.'
 }
 
+
 def start(update, context):
     context.bot.send_message(chat_id=update.effective_chat.id, text="Привет, введи свой знак чтобы получить предсказание!")
 
 
-def help(update, context):
+def tghelp(update, context):
     context.bot.send_message(chat_id=update.effective_chat.id, text='Введи свой знак зодиака чтобы получить предсказание')
 
 
 def zodiac_prediction(update, context):
-    user_sign = update.message.text.lower()
+    user_sign = update.message.text.lower.strip()   
     if user_sign in ZODIACS:
         prediction = ZODIACS[user_sign]
         context.bot.send_message(chat_id=update.effective_chat.id, text=f'Предсказание на сегодня для знака {user_sign}: {prediction}')
@@ -45,16 +42,21 @@ def zodiac_prediction(update, context):
         zodiac_list = ", ".join(zodiac_sign)
         context.bot.send_message(chat_id=update.effective_chat.id, 
                             text=f'Введите доступный знак: {zodiac_list}')
-    
 
+def main(): 
+    load_dotenv()
+    tg_token = os.getenv("TG_TOKEN")
 
-start_handler = CommandHandler('start', start)
-dispatcher.add_handler(start_handler)
+    updater = Updater(token=tg_token, use_context=True)
+    dispatcher = updater.dispatcher
 
-help_handler = CommandHandler('help', help)
-dispatcher.add_handler(help_handler)
+    start_handler = CommandHandler('start', start)
+    dispatcher.add_handler(start_handler)
 
-zodiac_handler = MessageHandler(Filters.text & (~Filters.command), zodiac_prediction)
-dispatcher.add_handler(zodiac_handler)
+    help_handler = CommandHandler('help', tghelp)
+    dispatcher.add_handler(help_handler)
 
-updater.start_polling()
+    zodiac_handler = MessageHandler(Filters.text & (~Filters.command), zodiac_prediction)
+    dispatcher.add_handler(zodiac_handler)
+    updater.start_polling()
+    updater.idle()
